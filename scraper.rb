@@ -1,24 +1,35 @@
-# This is a template for a Ruby scraper on Morph (https://morph.io)
-# including some code snippets below that you should find helpful
+require 'mechanize'
+require 'scraperwiki'
 
-# require 'scraperwiki'
-# require 'mechanize'
-#
-# agent = Mechanize.new
-#
-# # Read in a page
-# page = agent.get("http://foo.com")
-#
-# # Find somehing on the page using css selectors
-# p page.at('div.content')
-#
-# # Write out to the sqlite database using scraperwiki library
-# ScraperWiki.save_sqlite(["name"], {"name" => "susan", "occupation" => "software developer"})
-#
-# # An arbitrary query against the database
-# ScraperWiki.select("* from data where 'name'='peter'")
+agent = Mechanize.new
+url = 'http://datrack.canterbury.nsw.gov.au/cgi/datrack.pl?status=On Notification&search=search'
 
-# You don't have to do things with the Mechanize or ScraperWiki libraries. You can use whatever gems are installed
-# on Morph for Ruby (https://github.com/openaustralia/morph-docker-ruby/blob/master/Gemfile) and all that matters
-# is that your final data is written to an Sqlite database called data.sqlite in the current working directory which
-# has at least a table called data.
+application_list = agent.get url
+
+application_list.search('.datrack_resultrow_odd,.datrack_resultrow_even').each do |row|
+  info_url = row.at(:a).attr(:href)
+  day, month, year = row.at('.datrack_lodgeddate_cell').inner_text.split('/').map { |n| n.to_i }
+  address = row.at('.datrack_houseno_cell').inner_text + ' ' +
+            row.at('.datrack_street_cell').inner_text + ', ' +
+            row.at('.datrack_town_cell').inner_text + ' NSW'
+
+  detail_page = agent.get info_url
+
+  application = {
+    council_reference: row.at(:a).inner_text,
+    address: address,
+    description: detail_page.at('.wh_preview_master').search(:td)[1].inner_text,
+    info_url: info_url,
+    comment_url: 'mailto:council@canterbury.nsw.gov.au',
+    date_scraped: Date.today,
+    date_received: Date.new(year, month, day)
+  }
+
+  if (ScraperWiki.select("* from data where `council_reference`='#{application[:council_reference]}'").empty? rescue true)
+    ScraperWiki.save_sqlite([:council_reference], application)
+  else
+    puts "Skipping already saved record " + application[:council_reference]
+  end
+end
+
+# TODO: Iterate through pagination
