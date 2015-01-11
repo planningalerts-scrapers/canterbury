@@ -32,6 +32,12 @@ def save_applications(application_list)
   end
 end
 
-save_applications @agent.get(url)
+puts 'Getting first page'
+application_list = @agent.get(url)
+save_applications application_list
 
-# TODO: Iterate through pagination
+while application_list.link_with(text: 'Next')
+  puts 'Getting next page'
+  application_list = application_list.link_with(text: 'Next').click
+  save_applications application_list
+end
