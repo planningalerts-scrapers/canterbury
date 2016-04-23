@@ -2,7 +2,7 @@ require 'mechanize'
 require 'scraperwiki'
 
 @agent = Mechanize.new
-url = 'http://datrack.canterbury.nsw.gov.au/cgi/datrack.pl?status=On Notification&search=search'
+url = 'http://datrack.canterbury.nsw.gov.au/cgi/datrack.pl?search=search'
 
 def save_applications(application_list)
   application_list.search('.datrack_resultrow_odd,.datrack_resultrow_even').each do |row|
@@ -38,8 +38,10 @@ puts 'Getting first page'
 application_list = @agent.get(url)
 save_applications application_list
 
+pageno = 1
 while application_list.link_with(text: 'Next')
-  puts 'Getting next page'
+  puts 'Getting next page ' + pageno.to_s
   application_list = application_list.link_with(text: 'Next').click
   save_applications application_list
+  pageno += 1
 end
