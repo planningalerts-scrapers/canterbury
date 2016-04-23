@@ -2,7 +2,7 @@ require 'mechanize'
 require 'scraperwiki'
 
 @agent = Mechanize.new
-url = 'http://datrack.canterbury.nsw.gov.au/cgi/datrack.pl?status=On Notification&search=search'
+url = 'http://datrack.canterbury.nsw.gov.au/cgi/datrack.pl?search=search'
 
 def save_applications(application_list)
   application_list.search('.datrack_resultrow_odd,.datrack_resultrow_even').each do |row|
