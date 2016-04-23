@@ -38,8 +38,10 @@ puts 'Getting first page'
 application_list = @agent.get(url)
 save_applications application_list
 
+pageno = 1
 while application_list.link_with(text: 'Next')
-  puts 'Getting next page'
+  puts 'Getting next page ' + pageno.to_s
   application_list = application_list.link_with(text: 'Next').click
   save_applications application_list
+  pageno += 1
 end
