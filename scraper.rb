@@ -7,10 +7,6 @@ url = 'http://datrack.canterbury.nsw.gov.au/cgi/datrack.pl?search=search&sortfie
 def save_applications(application_list)
   application_list.search('.datrack_resultrow_odd,.datrack_resultrow_even').each do |row|
     council_reference = row.at(:a).inner_text
-    if !(ScraperWiki.select("* from swdata where `council_reference`='#{council_reference}'").empty? rescue true)
-      puts "Skipping already saved record #{council_reference}"
-      next
-    end
 
     info_url = row.at(:a).attr(:href)
     day, month, year = row.at('.datrack_lodgeddate_cell').inner_text.split('/').map { |n| n.to_i }
